@@ -27,7 +27,7 @@ body {
     margin: 0 auto;
 }
 
-/* Header styling -- branded and professional */
+/* Header styling */
 header {
   display: flex;
   align-items: center; /* vertically center items */
@@ -41,13 +41,6 @@ header {
   text-align: center; /* for text inside the div */
 }
 
-/* Optional: make the header content stack vertically on small screens */
-@media(max-width: 600px){
-  header {
-    flex-direction: column;
-  }
-}
-
 header h1 {
     margin: 0;
     font-size: 1.8em;
@@ -57,6 +50,13 @@ header h1 {
 header img {
     height: 50px; /* optional logo size */
     margin-right: 1rem;
+}
+
+/* Stacking content vertically on small screens */
+@media(max-width: 600px){
+  header {
+    flex-direction: column;
+  }
 }
 
 /* Horizontal Navigation Bar */
@@ -104,7 +104,7 @@ header img {
   /* border-bottom: 3px solid #fff; */
 }
 
-/* Optional: add underline for active tab instead of background */
+/* Adding Underline for Active Nav Bar Item */
 .nav-item.active::after {
   content: "";
   display: block;
@@ -227,4 +227,87 @@ header img {
 .map-button:hover {
     background-color: var(--button-hover);
     transform: translateY(-1px);
+}
+
+/* TABLE LAYOUT */
+/* Make the table responsive with horizontal scrolling on small screens */
+.table-responsive {
+  overflow-x: auto;
+}
+
+/* Table styles for clarity */
+.restaurant-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px; /* ensures horizontal scroll if needed */
+}
+
+.restaurant-table th,
+.restaurant-table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap; /* prevent wrapping for clarity */
+}
+
+.restaurant-table th {
+  background: #f8f9fa;
+  font-weight: 600;
+  position: sticky;
+  top: 0; /* makes header sticky when scrolling */
+  cursor: pointer;
+  user-select: none;
+  z-index: 10;
+}
+
+/* Alternating row colors for readability */
+.restaurant-table tbody tr:nth-child(even) {
+  background: #fafafa;
+}
+
+.restaurant-table tbody tr:hover {
+  background: #f1f1f1;
+}
+
+
+/* Make header cells larger or with a different font style */
+.restaurant-table thead th {
+  background-color: #cce5ff; /* soft blue background */
+  color: #000;
+  font-weight: 700;
+  font-size: 1.2em;
+  border-bottom: 2px solid #3399ff;
+  padding: 1rem;
+}
+
+/* Styling for search & export controls */
+.table-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  flex-wrap: wrap; /* allows wrapping on small screens */
+}
+
+#tableSearch {
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  flex: 1; /* expand to fill space */
+  min-width: 200px;
+}
+
+#exportBtn {
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  background-color: #007bff; /* bootstrap blue */
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+#exportBtn:hover {
+  background-color: #0056b3;
 }

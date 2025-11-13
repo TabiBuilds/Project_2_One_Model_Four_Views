@@ -68,6 +68,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       updateDisplay(viewsMap[viewName](data));
       updateNavActive(viewName);
     }
+    attachTableSorting();
+attachTableFilter();
+attachExportButton();
   }
 });
 
@@ -81,3 +84,97 @@ document.addEventListener("DOMContentLoaded", async () => {
     showError(error.message);
   }
 });
+
+function attachTableSorting() {
+  document.querySelectorAll('.sortable').forEach(header => {
+    header.addEventListener('click', () => {
+      const key = header.dataset.key;
+      // Toggle sort order: asc / desc
+      const currentOrder = header.dataset.order || 'asc';
+      const newOrder = currentOrder === 'asc' ? 'desc' : 'asc';
+      header.dataset.order = newOrder;
+
+      // Get rows
+      const tbody = header.closest('table').querySelector('tbody');
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+
+      // Sort rows
+      rows.sort((a, b) => {
+        const aText = a.querySelector(`td:nth-child(${header.cellIndex + 1})`).innerText;
+        const bText = b.querySelector(`td:nth-child(${header.cellIndex + 1})`).innerText;
+
+        // Basic comparison, can be extended for dates/numbers
+        if (!isNaN(aText) && !isNaN(bText)) {
+          return newOrder === 'asc' ? aText - bText : bText - aText;
+        } else {
+          return newOrder === 'asc' ? aText.localeCompare(bText) : bText.localeCompare(aText);
+        }
+      });
+
+      // Append sorted rows
+      rows.forEach(row => tbody.appendChild(row));
+    });
+  });
+}
+
+function attachTableFilter() {
+  const searchInput = document.getElementById('tableSearch');
+  const tbody = document.querySelector('.restaurant-table tbody');
+
+  searchInput.addEventListener('input', () => {
+    const filterText = searchInput.value.toLowerCase();
+
+    Array.from(tbody.rows).forEach(row => {
+      const nameCell = row.cells[0]; // assuming name is first column
+      const categoryCell = row.cells[4]; // assuming category is fifth column
+
+      const nameText = nameCell ? nameCell.innerText.toLowerCase() : '';
+      const categoryText = categoryCell ? categoryCell.innerText.toLowerCase() : '';
+
+      // Show row if either name or category includes the search term
+      if (nameText.includes(filterText) || categoryText.includes(filterText)) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+  });
+}
+
+function attachExportButton() {
+  const exportBtn = document.getElementById('exportBtn');
+  exportBtn.addEventListener('click', () => {
+    const table = document.querySelector('.restaurant-table');
+
+    // Select all data rows that are **not hidden**
+    const rows = Array.from(table.querySelectorAll('tbody tr')).filter(row => row.style.display !== 'none');
+
+    // Prepare CSV
+    const columns = ['name', 'date', 'result', 'location', 'category']; // your columns
+    const csvRows = [];
+
+    // Add headers
+    csvRows.push(columns.join(','));
+
+    // Add only visible rows data
+    rows.forEach(row => {
+      const cells = Array.from(row.cells);
+      const rowData = columns.map((col, index) => {
+        // match columns with cells
+        return `"${(cells[index]?.innerText || '').replace(/"/g, '""')}"`;
+      });
+      csvRows.push(rowData.join(','));
+    });
+
+    const csvContent = csvRows.join('\n');
+
+    // Download
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'filtered-data.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+}

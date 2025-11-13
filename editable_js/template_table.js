@@ -1,26 +1,51 @@
-
-/**
- * TABLE VIEW - STUDENTS IMPLEMENT
- * Display data in sortable rows - good for scanning specific information
- */
 function showTable(data) {
-  // TODO: Students implement this function
-  // Requirements:
-  // - Show data in a table format
-  // - Include all important fields
-  // - Make it easy to scan and compare
-  // - Consider adding sorting functionality
-  /*html*/ 
+  const columns = [
+    { key: 'name', label: 'Restaurant Name' },
+    { key: 'address_line_1', label: 'Location' },
+    { key: 'category', label: 'Category' }
+  ];
+
+  // Generate table header with sortable columns
+  const headers = columns.map((col, index) => `
+    <th
+      scope="col"
+      role="button"
+      aria-sort="none"
+      data-key="${col.key}"
+      class="sortable"
+      aria-label="Sort by ${col.label}"
+    >
+      ${col.label}
+      <span class="sort-indicator" aria-hidden="true"></span>
+    </th>
+  `).join('');
+
+  // Generate table rows
+  const rows = data.map(item => {
+    const rowCells = columns.map(col => {
+      const value = item[col.key] || 'N/A'; // handle missing data
+      return `<td>${value}</td>`;
+    }).join('');
+    return `<tr>${rowCells}</tr>`;
+  }).join('');
+
   return `
-                <h2 class="view-title">📊 Table View</h2>
-                <div class="todo-implementation">
-                    <h3>TODO: Implement Table View</h3>
-                    <p><strong>Your task:</strong> Display the data as a sortable table</p>
-                    <p><strong>Good for:</strong> Scanning specific data points, comparing values, finding specific information</p>
-                    <p><strong>Consider:</strong> Which columns are most important? How can you make scanning easy?</p>
-                    <p><strong>Data available:</strong> ${data.length} items loaded</p>
-                </div>
-            `;
+    <div class="table-controls">
+  <input type="text" id="tableSearch" placeholder="Search by Name or Category" aria-label="Search table" />
+  <button id="exportBtn">Export CSV</button>
+</div>
+    <div class="table-responsive" role="region" aria-label="Data table">
+      <table class="restaurant-table" aria-labelledby="tableLabel">
+        <caption id="tableLabel" style="display:none;">Data table of restaurants</caption>
+        <thead>
+          <tr>${headers}</tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+    </div>
+  `;
 }
 
 export default showTable;
