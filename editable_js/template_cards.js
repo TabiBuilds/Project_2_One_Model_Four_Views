@@ -1,36 +1,56 @@
-
-/**
- * CARD VIEW - PROVIDED AS EXAMPLE
- * Display data as browsable cards - good for comparing individual items
- */
 function showCards(data) {
   const cardHTML = data
     .map(
-       /*html*/ 
-      (restaurant) => `
-                <div class="restaurant-card">
-                    <h3>${restaurant.name}</h3>
-                    <p><strong>Cuisine:</strong> ${restaurant.cuisine}</p>
-                    <p><strong>Rating:</strong> ${
-                      restaurant.rating
-                    }⭐ | <strong>Price:</strong> ${restaurant.priceRange}</p>
-                    <p><strong>Location:</strong> ${restaurant.neighborhood}</p>
-                    <p><strong>Phone:</strong> ${restaurant.phoneNumber}</p>
-                    <p><strong>Specialties:</strong> ${restaurant.specialties.join(
-                      ", "
-                    )}</p>
-                </div>
-            `
+      (restaurant) => {
+        // Define phrase-to-color mappings
+        const phraseColorMap = [
+          { phrase: 'violations', color: 'red' },
+          { phrase: 'compliant - no health risk', color: 'green' },
+          { phrase: 'compliance schedule', color: 'orange' },
+          { phrase: 'facility closed', color: 'gray' },
+          { phrase: 'facility opened', color: 'blue' },
+        ];
+
+        // Determine the color based on inspection results
+        let resultsColor = 'black'; // default color
+        if (restaurant.inspection_results) {
+          const resultText = restaurant.inspection_results.toLowerCase();
+          for (const { phrase, color } of phraseColorMap) {
+            if (resultText.includes(phrase)) {
+              resultsColor = color;
+              break;
+            }
+          }
+        }
+
+        // Truncating the Restaurant's address
+        const address = restaurant.address_line_1 || 'N/A';
+        const addressSnippet = address.length > 30 ? address.substring(0, 30) + '...' : address;
+
+        // Linking to Google Maps
+        const coords = restaurant.geocoded_column_1?.coordinates;
+        const mapLink = coords ? `https://www.google.com/maps/search/?api=1&query=${coords[1]},${coords[0]}` : '#';
+
+        return `
+        <div class="restaurant-card">
+            <h3> ${restaurant.name || 'N/A'}</h3>
+            <p><strong>🍽️ Category:</strong> ${restaurant.category || 'N/A'}</p>
+            <p><strong>📍 Address:</strong> ${addressSnippet}</p>
+            <p><strong>🗓️ Inspection Date:</strong> ${restaurant.inspection_date || 'N/A'}</p>
+            <p style="color: ${resultsColor};"><strong>✅ Results:</strong> ${restaurant.inspection_results || 'N/A'}</p>
+            <p><strong>👤 Owner:</strong> ${restaurant.owner || 'N/A'}</p>
+            <button class="map-button" onclick="window.open('${mapLink}', '_blank')">View Restaurant on Maps</button>
+        </div>
+        `;
+      }
     )
     .join("");
-     /*html*/ 
+
   return `
-                <h2 class="view-title">🃏 Card View</h2>
-                <p class="view-description">Browse restaurants as individual cards - perfect for comparing options</p>
-                <div class="card-grid">
-                    ${cardHTML}
-                </div>
-            `;
+    <div class="card-grid">
+      ${cardHTML}
+    </div>
+  `;
 }
 
 export default showCards;

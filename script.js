@@ -5,9 +5,13 @@ import showTable from './editable_js/template_table.js';
 
 import loadData from './editable_js/load_data.js';
 
-// ============================================
-// DISPLAY MANAGEMENT - PROVIDED
-// ============================================
+// Map view names to functions
+const viewsMap = {
+  cards: showCards,
+  table: showTable,
+  categories: showCategories,
+  stats: showStats
+};
 
 /**
  * Update the display with new content
@@ -17,13 +21,14 @@ function updateDisplay(content) {
 }
 
 /**
- * Update button states
+ * Update button (nav item) active states
  */
-function updateButtonStates(activeView) {
-  document.querySelectorAll(".view-button").forEach((button) => {
-    button.classList.remove("active");
+function updateNavActive(selectedView) {
+  document.querySelectorAll(".nav-item").forEach((item) => {
+    item.classList.remove("active");
   });
-  document.getElementById(`btn-${activeView}`).classList.add("active");
+  const activeItem = document.querySelector(`.nav-item[data-view="${selectedView}"]`);
+  if (activeItem) activeItem.classList.add("active");
 }
 
 /**
@@ -36,62 +41,43 @@ function showLoading() {
 /**
  * Show error state
  */
- /*html*/ 
 function showError(message) {
   updateDisplay(`
-                <div class="error">
-                    <h3>Error Loading Data</h3>
-                    <p>${message}</p>
-                    <button onclick="location.reload()">Try Again</button>
-                </div>
-            `);
+    <div class="error">
+      <h3>Error Loading Data</h3>
+      <p>${message}</p>
+      <button onclick="location.reload()">Try Again</button>
+    </div>
+  `);
 }
 
-// ============================================
-// APPLICATION INITIALIZATION - PROVIDED
-// ============================================
-
-/**
- * Main application function - handles data loading and button setup
- * This pattern always works - no timing issues!
- */
+// Main app initialization
 document.addEventListener("DOMContentLoaded", async () => {
   console.log("Starting application...");
-
   try {
-    // Load data once
     showLoading();
     const data = await loadData();
     console.log(`Loaded ${data.length} items from API`);
 
-    // Set up button event handlers - this pattern always works!
-    document.getElementById("btn-cards").onclick = () => {
-      updateDisplay(showCards(data));
-      updateButtonStates("cards");
-    };
-
-    document.getElementById("btn-table").onclick = () => {
-      updateDisplay(showTable(data));
-      updateButtonStates("table");
-    };
-
-    document.getElementById("btn-categories").onclick = () => {
-      updateDisplay(showCategories(data));
-      updateButtonStates("categories");
-    };
-
-    document.getElementById("btn-stats").onclick = () => {
-      updateDisplay(showStats(data));
-      updateButtonStates("stats");
-    };
+    // Set up nav bar click handler (event delegation)
+    document.querySelector('.navbar').addEventListener('click', (event) => {
+  const target = event.target.closest('.nav-item');
+  if (target && target.classList.contains('nav-item')) {
+    const viewName = target.getAttribute('data-view');
+    if (viewsMap[viewName]) {
+      updateDisplay(viewsMap[viewName](data));
+      updateNavActive(viewName);
+    }
+  }
+});
 
     // Show initial view
     updateDisplay(showCards(data));
-    updateButtonStates("cards");
+    updateNavActive('cards');
 
     console.log("Application ready!");
   } catch (error) {
-    console.error("Application failed to start:", error);
+    console.error("Failed to start:", error);
     showError(error.message);
   }
 });

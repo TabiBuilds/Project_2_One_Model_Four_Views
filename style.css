@@ -1,61 +1,132 @@
-/* BASE STYLES - Students can modify and extend */
+/* --- Maryland-Themed & Professional Styles --- */
 :root {
-    --primary-color: #007cba;
-    --secondary-color: #28a745;
-    --background-color: #f8f9fa;
-    --card-background: #ffffff;
-    --text-color: #333;
-    --border-color: #ddd;
+    --primary-color: #E03A3E; /* Maryland Red */
+    --secondary-color: #f4a261; /* Accent color (e.g., orange) */
+    --background-color: #f8f9fa; /* Light background for overall page */
+    --card-background: #ffffff; /* White cards */
+    --text-color: #222; /* Darker text for readability */
+    --border-color: #dcdcdc; /* neutral borders */
     --shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --header-background: #E03A3E; /* Header background color */
+    --button-background: #E03A3E; /* Button background color */
+    --button-hover: #b02a2f; /* Darker shade for hover effects */
 }
 
+/* Basic page styles */
 body {
-    font-family: system-ui, sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
     margin: 0;
     padding: 1rem;
     background: var(--background-color);
     color: var(--text-color);
 }
 
+/* Container */
 .container {
     max-width: 1200px;
     margin: 0 auto;
 }
 
-.view-selector {
-    display: flex;
-    gap: 1rem;
-    margin: 2rem 0;
-    flex-wrap: wrap;
+/* Header styling -- branded and professional */
+header {
+  display: flex;
+  align-items: center; /* vertically center items */
+  justify-content: center; /* center horizontally */
+  gap: 1rem; /* space between image and text */
+  background-color: #d33; /* your existing color */
+  padding: 1rem;
+  border-radius: 8px 8px 0 0;
+  box-shadow: var(--shadow);
+  color: #fff;
+  text-align: center; /* for text inside the div */
 }
 
-.view-button {
-    background: var(--primary-color);
-    color: white;
-    border: none;
-    padding: 0.75rem 1.5rem;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 1rem;
-    transition: background-color 0.2s;
+/* Optional: make the header content stack vertically on small screens */
+@media(max-width: 600px){
+  header {
+    flex-direction: column;
+  }
 }
 
-.view-button:hover {
-    background: #005a87;
+header h1 {
+    margin: 0;
+    font-size: 1.8em;
+    font-weight: 700;
 }
 
-.view-button.active {
-    background: var(--secondary-color);
+header img {
+    height: 50px; /* optional logo size */
+    margin-right: 1rem;
 }
 
+/* Horizontal Navigation Bar */
+/* Navbar container */
+.navbar {
+  background-color: var(--primary-color);
+  padding: 0.5rem 1rem;
+  display: flex;
+  justify-content: center;
+  box-shadow: var(--shadow);
+  border-radius: 0 0 8px 8px;
+}
+
+/* Nav list styles */
+.nav-list {
+  list-style: none;
+  display: flex;
+  margin: 0;
+  padding: 0;
+}
+
+/* Nav item styles */
+.nav-item {
+  padding: 0.75rem 1.5rem;
+  margin: 0 0.5rem;
+  cursor: pointer;
+  color: #fff;
+  font-weight: 600;
+  border-radius: 4px;
+  transition: background-color 0.2s, transform 0.2s;
+  position: relative;
+}
+
+/* Hover effect */
+.nav-item:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+/* Active tab styling */
+.nav-item.active {
+  background-color: rgba(255, 255, 255, 0.3);
+  font-weight: bold;
+  /* Add a bottom border for emphasis if desired */
+  /* border-bottom: 3px solid #fff; */
+}
+
+/* Optional: add underline for active tab instead of background */
+.nav-item.active::after {
+  content: "";
+  display: block;
+  height: 3px;
+  background-color: #fff;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  border-radius: 0 0 4px 4px;
+}
+
+/* Main display area styling */
 .display-container {
-    background: var(--card-background);
+    background: #fff;
     border-radius: 8px;
     padding: 2rem;
-    min-height: 400px;
+    margin-top: 1rem;
     box-shadow: var(--shadow);
 }
 
+/* Loading & error states */
 .loading {
     text-align: center;
     color: #666;
@@ -72,12 +143,13 @@ body {
     text-align: center;
 }
 
-/* UTILITY CLASSES FOR STUDENTS */
+/* Titles and section headers */
 .view-title {
     margin: 0 0 1rem 0;
     color: var(--text-color);
     border-bottom: 2px solid #eee;
     padding-bottom: 0.5rem;
+    font-weight: 600;
 }
 
 .view-description {
@@ -86,118 +158,73 @@ body {
     font-style: italic;
 }
 
-/* CARD GRID LAYOUT */
+/* Card Grid Layout */
 .card-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 1.5rem;
+    padding: 1rem;
 }
 
+/* Individual Card Styling */
 .restaurant-card {
     border: 1px solid var(--border-color);
     border-radius: 8px;
-    padding: 1.5rem;
     background: var(--card-background);
-    transition: transform 0.2s, box-shadow 0.2s;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    transition: box-shadow 0.2s, transform 0.2s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .restaurant-card:hover {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-/* TABLE LAYOUT */
-.restaurant-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 1rem;
+.restaurant-card h3 {
+    font-size: 1.3em;
+    font-weight: 700;
+    margin-bottom: 0.75em;
+    display: flex;
+    align-items: center;
+    color: var(--primary-color);
 }
 
-.restaurant-table th,
-.restaurant-table td {
-    padding: 0.75rem;
-    text-align: left;
-    border-bottom: 1px solid var(--border-color);
+.restaurant-card p {
+    margin: 0.4em 0;
+    font-size: 0.95em;
+    line-height: 1.4;
 }
 
-.restaurant-table th {
-    background: #f8f9fa;
+.restaurant-card p strong {
+    display: inline-block;
+    width: 130px;
+    font-weight: 600;
+    color: #555;
+}
+
+/* Dynamic Results Text (set inline in JS) */
+.inspection-result {
     font-weight: 600;
 }
 
-.restaurant-table tr:hover {
-    background: #f8f9fa;
+/* Buttons (e.g., View on Map) */
+.map-button {
+    background-color: var(--primary-color);
+    color: #fff;
+    border: none;
+    padding: 0.75em 1.2em;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+    margin-top: 1em;
+    align-self: flex-start;
+    transition: background-color 0.3s, transform 0.2s;
 }
 
-/* CATEGORY GROUPS */
-.category-section {
-    margin-bottom: 2rem;
-}
-
-.category-header {
-    background: var(--primary-color);
-    color: white;
-    padding: 1rem;
-    margin: 0;
-    border-radius: 8px 8px 0 0;
-}
-
-.category-items {
-    border: 1px solid var(--border-color);
-    border-top: none;
-    border-radius: 0 0 8px 8px;
-}
-
-.category-item {
-    padding: 1rem;
-    border-bottom: 1px solid #eee;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.category-item:last-child {
-    border-bottom: none;
-}
-
-/* STATS LAYOUT */
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
-}
-
-.stat-card {
-    text-align: center;
-    padding: 2rem;
-    background: linear-gradient(135deg, var(--primary-color), #0056b3);
-    color: white;
-    border-radius: 8px;
-}
-
-.stat-number {
-    font-size: 3rem;
-    font-weight: bold;
-    margin: 0.5rem 0;
-}
-
-.stat-label {
-    font-size: 1.1rem;
-    opacity: 0.9;
-}
-
-.todo-implementation {
-    background: #fff3cd;
-    border: 2px dashed #ffc107;
-    border-radius: 8px;
-    padding: 2rem;
-    text-align: center;
-    color: #856404;
-}
-
-.asst-box {
-    margin-top: 2rem;
-    padding: 1rem;
-    background: white;
-    border-radius: 8px;
+.map-button:hover {
+    background-color: var(--button-hover);
+    transform: translateY(-1px);
 }
