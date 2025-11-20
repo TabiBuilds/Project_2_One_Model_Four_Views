@@ -278,8 +278,6 @@ function showStats(data) {
 
   /*html*/
   return ` 
-    <h2 class="view-title">📈 Statistics View</h2>
-    
     <div class="stats-grid">
       <div class="stat-card total-restaurants">
         <h3>Total Restaurants</h3>
