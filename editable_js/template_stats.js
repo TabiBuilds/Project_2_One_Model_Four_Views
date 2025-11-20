@@ -22,6 +22,7 @@ function getComplianceStatus(item) {
 // Helper: Define colors based on user's compliance thresholds
 function getComplianceColorClass(rate) {
     const r = parseFloat(rate);
+    // These classes should match CSS variables defined in style.css
     if (r >= 70) {
         return 'compliant-high'; 
     } else if (r >= 50) {
@@ -100,10 +101,16 @@ function analyzeCategoryCompliance(data) {
 function initCharts(data) {
   const categoryData = analyzeCategoryCompliance(data);
 
+  // Define semantic colors for Chart.js
+  const compliantColor = '#28a745'; // Green
+  const nonCompliantColor = '#dc3545'; // Red
+  const warningColor = '#ffc107'; // Yellow/Amber
+  const neutralColor = '#CCCCCC'; // Gray for the non-compliant part of the stacked bar
+
   const colorMap = {
-      'compliant-high': '#28a745', 
-      'compliant-mid': '#ffc107',  
-      'compliant-low': '#dc3545'   
+      'compliant-high': compliantColor, 
+      'compliant-mid': warningColor,  
+      'compliant-low': nonCompliantColor
   };
   
   // --- Chart 1: Overall Compliance Distribution (Doughnut Chart) ---
@@ -118,9 +125,9 @@ function initCharts(data) {
           label: 'Overall Inspection Results',
           data: [summary.compliant, summary.nonCompliant, summary.total - summary.compliant - summary.nonCompliant],
           backgroundColor: [
-            '#28a745', 
-            '#dc3545', 
-            '#ffc107'  
+            compliantColor,    // Compliant (Green)
+            nonCompliantColor, // Non-Compliant (Red)
+            warningColor       // Other/Unknown (Yellow/Amber)
           ],
           hoverOffset: 8
         }]
@@ -143,6 +150,7 @@ function initCharts(data) {
     const compliantRates = categoryData.map(d => d.compliantRate);
     const nonCompliantRates = categoryData.map(d => 100 - d.compliantRate);
     
+    // Apply dynamic compliance color based on the rate (uses colorMap defined above)
     const compliantBarColors = compliantRates.map(rate => {
         return colorMap[getComplianceColorClass(rate)];
     });
@@ -154,12 +162,12 @@ function initCharts(data) {
         datasets: [{
           label: 'Compliant Rate (%)',
           data: compliantRates,
-          backgroundColor: compliantBarColors, 
+          backgroundColor: compliantBarColors, // Dynamic color: Green, Yellow, or Red
         },
         {
           label: 'Non-Compliant Rate (%)',
           data: nonCompliantRates,
-          backgroundColor: '#CCCCCC', 
+          backgroundColor: neutralColor, // Consistent Gray for the non-compliant segment
         }]
       },
       options: {
@@ -196,9 +204,7 @@ function showStats(data) {
   setTimeout(() => initCharts(data), 50);
 
   /*html*/
-  return `
-    <h2 class="view-title">📈 Statistics View</h2>
-    
+  return ` 
     <div class="stats-grid">
       <div class="stat-card total-restaurants">
         <h3>Total Restaurants</h3>
@@ -206,7 +212,7 @@ function showStats(data) {
       </div>
       <div class="stat-card compliance-rate">
         <h3>Overall Compliance Rate</h3>
-        <p class="big-number">${complianceSummary.complianceRate}%</p>
+        <p class="big-number ${getComplianceColorClass(complianceSummary.complianceRate)}">${complianceSummary.complianceRate}%</p>
       </div>
       <div class="stat-card unique-cities">
         <h3>Unique Cities Served</h3>
@@ -222,11 +228,6 @@ function showStats(data) {
       <div class="chart-box chart-bar">
         <canvas id="categoryComplianceChart"></canvas>
       </div>
-    </div>
-
-    <div class="enhancement-note">
-        <p><strong>Project 3 Enhancement:</strong> Data Visualization using Chart.js</p>
-        <p>This view now uses interactive charts to quickly visualize overall inspection results and compliance rates across the top 10 restaurant categories.</p>
     </div>
   `;
 }

@@ -114,8 +114,6 @@ function showCategories(data, fields) {
 
   /*html*/
   return `
-    <h2 class="view-title">📂 Grouped Categories</h2>
-    
     <div class="category-controls">
         <input type="text" id="categorySearch" placeholder="Search by name, city, or address..." />
         <select id="categoryFilter">
