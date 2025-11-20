@@ -97,8 +97,6 @@ function analyzeCategoryCompliance(data) {
     const categoryCompliance = {};
 
     data.forEach(item => {
-        // NOTE: This uses 'Non-Compliant' in the analysis, which will mostly match 
-        // the 'Non-Compliant/Violations' group, but not perfectly.
         const status = getComplianceStatus(item); 
         
         const props = item.properties || item;
@@ -106,28 +104,50 @@ function analyzeCategoryCompliance(data) {
         if (!category) return;
 
         if (!categoryCompliance[category]) {
-            categoryCompliance[category] = { total: 0, compliant: 0, nonCompliant: 0 };
+            // Updated structure to count all 5 statuses
+            categoryCompliance[category] = { 
+                total: 0, 
+                compliant: 0, 
+                nonCompliant: 0, 
+                schedule: 0, 
+                closed: 0,
+                reopened: 0 
+            };
         }
+
         categoryCompliance[category].total++;
         if (status === 'Compliant') {
             categoryCompliance[category].compliant++;
-        } 
-        // Only count 'Non-Compliant/Violations' as Non-Compliant for the bar chart rate calculation
-        else if (status === 'Non-Compliant/Violations') { 
+        } else if (status === 'Non-Compliant/Violations') {
             categoryCompliance[category].nonCompliant++;
+        } else if (status === 'Compliance Schedule') {
+            categoryCompliance[category].schedule++;
+        } else if (status === 'Facility Closed') {
+            categoryCompliance[category].closed++;
+        } else if (status === 'Facility Reopened') {
+            categoryCompliance[category].reopened++;
         }
     });
 
     return Object.entries(categoryCompliance)
-        .map(([category, counts]) => ({
-            category,
-            total: counts.compliant + counts.nonCompliant, // Only count Compliant/Non-Compliant for this rate
-            compliant: counts.compliant,
-            nonCompliant: counts.nonCompliant,
-            compliantRate: (counts.compliant + counts.nonCompliant) > 0 
-              ? (counts.compliant / (counts.compliant + counts.nonCompliant)) * 100 
-              : 0
-        }))
+        .map(([category, counts]) => {
+            const sumAll = counts.total;
+            return {
+                category,
+                total: sumAll, 
+                compliant: counts.compliant,
+                nonCompliant: counts.nonCompliant,
+                schedule: counts.schedule,
+                closed: counts.closed,
+                reopened: counts.reopened,
+                // Calculate percentage based on the total inspections for that category
+                compliantPercent: sumAll > 0 ? (counts.compliant / sumAll) * 100 : 0,
+                nonCompliantPercent: sumAll > 0 ? (counts.nonCompliant / sumAll) * 100 : 0,
+                schedulePercent: sumAll > 0 ? (counts.schedule / sumAll) * 100 : 0,
+                closedPercent: sumAll > 0 ? (counts.closed / sumAll) * 100 : 0,
+                reopenedPercent: sumAll > 0 ? (counts.reopened / sumAll) * 100 : 0,
+            };
+        })
         // Only show categories with at least 10 inspections counted in the rate
         .filter(d => d.total >= 10) 
         .sort((a, b) => b.total - a.total) 
@@ -214,30 +234,43 @@ function initCharts(data) {
   const categoryCtx = document.getElementById('categoryComplianceChart');
   if (categoryCtx) {
     const categories = categoryData.map(d => d.category);
-    const compliantRates = categoryData.map(d => d.compliantRate);
-    const nonCompliantRates = categoryData.map(d => 100 - d.compliantRate);
     
-    // The compliant rates are used to determine the color of the compliant segment
-    const compliantBarColors = compliantRates.map(rate => {
-        const rateClass = getComplianceColorClass(rate);
-        return rateClass === 'compliant-high' ? compliantColor : 
-               rateClass === 'compliant-mid' ? scheduleColor : 
-               nonCompliantColor;
-    });
+    // NEW: Prepare datasets for all 5 statuses
+    const compliantSet = categoryData.map(d => d.compliantPercent);
+    const nonCompliantSet = categoryData.map(d => d.nonCompliantPercent);
+    const scheduleSet = categoryData.map(d => d.schedulePercent);
+    const closedSet = categoryData.map(d => d.closedPercent);
+    const reopenedSet = categoryData.map(d => d.reopenedPercent);
     
     new Chart(categoryCtx.getContext('2d'), {
       type: 'bar', 
       data: {
         labels: categories,
-        datasets: [{
-          label: 'Compliant Rate (%)',
-          data: compliantRates,
-          backgroundColor: compliantBarColors, // Dynamic color: Green, Yellow, or Red
+        datasets: [
+        {
+          label: 'Compliant',
+          data: compliantSet,
+          backgroundColor: compliantColor,
         },
         {
-          label: 'Non-Compliant Rate (%)',
-          data: nonCompliantRates,
-          backgroundColor: neutralColor, // Consistent Gray for the non-compliant segment
+          label: 'Non-Compliant/Violations',
+          data: nonCompliantSet,
+          backgroundColor: nonCompliantColor,
+        },
+        {
+          label: 'Compliance Schedule',
+          data: scheduleSet,
+          backgroundColor: scheduleColor,
+        },
+        {
+          label: 'Facility Reopened', // Put reopened near the top (better visibility)
+          data: reopenedSet,
+          backgroundColor: reopenedColor,
+        },
+        {
+          label: 'Facility Closed',
+          data: closedSet,
+          backgroundColor: closedColor,
         }]
       },
       options: {
@@ -257,7 +290,8 @@ function initCharts(data) {
         },
         plugins: {
           legend: { position: 'bottom' },
-          title: { display: true, text: 'Compliance Rate by Top Restaurant Category' }
+          // NEW: Update title to reflect full distribution
+          title: { display: true, text: 'Inspection Status Distribution by Top Restaurant Category' }
         }
       }
     });
