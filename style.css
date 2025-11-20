@@ -403,6 +403,7 @@ header img {
  * ==================================== */
 
 /* style.css */
+/* style.css */
 
 .stats-grid {
     display: grid;
@@ -413,8 +414,8 @@ header img {
     margin-bottom: 40px; 
     
     /* Optional: Add a subtle bottom border or line for clearer division */
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--border-color); 
+    /* padding-bottom: 20px;
+    /* border-bottom: 1px solid var(--border-color); */
 }
 
 .stat-card {
@@ -453,20 +454,38 @@ header img {
 /* ====================================
  * STATS VIEW: Chart.js Containers
  * ==================================== */
+/* Styles for the chart section */
 .chart-container-flex {
     display: flex;
-    flex-wrap: wrap; /* Allows charts to stack on small screens */
-    gap: var(--spacing-lg);
-    margin-top: var(--spacing-lg);
+    gap: 20px;
+    flex-wrap: wrap;
 }
 
 .chart-box {
-    flex: 1 1 45%; /* Default to two charts per row (45% width each) */
-    min-width: 300px; /* Ensure minimum size for mobile readability */
-    padding: var(--spacing-md);
+    /* FIX: Force them to take up exactly 50% minus the gap space */
+    width: calc(50% - 10px); /* 10px is half of the 20px gap */
+    
+    /* Ensure they don't shrink too much */
+    min-width: 0; 
+    
+    /* Ensure they are still responsive and grow */
+    flex-grow: 1; 
+    
+    /* Optional: You can enforce a fixed max height if needed, but 400px should be enough */
+    height: 400px;
+    
     background: var(--card-background);
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
+}
+
+/* This media query ensures they stack neatly on small screens */
+@media (max-width: 768px) {
+    .chart-box {
+        width: 100%;
+        min-width: 100%;
+    }
 }
 
 .chart-box.chart-bar {
