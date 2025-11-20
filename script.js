@@ -1,5 +1,5 @@
 import showCards from './editable_js/template_cards.js';
-import showCategories from './editable_js/template_category.js';
+import showGroupedCategories from './editable_js/template_category.js';
 import showStats from './editable_js/template_stats.js';
 import showTable from './editable_js/template_table.js';
 
@@ -9,7 +9,7 @@ import loadData from './editable_js/load_data.js';
 const viewsMap = {
   cards: showCards,
   table: showTable,
-  categories: showCategories,
+  categories: showGroupedCategories,
   stats: showStats
 };
 
@@ -177,4 +177,43 @@ function attachExportButton() {
     a.click();
     URL.revokeObjectURL(url);
   });
+}
+
+
+function groupByFields(data, fields) {
+  const groups = {};
+
+  data.forEach(item => {
+    // Build the group key based on selected fields
+    const key = fields.map(field => item[field] || 'Unknown').join(' | ');
+    
+    if (!groups[key]) {
+      groups[key] = {
+        items: [],
+        counts: {
+          total: 0,
+          compliant: 0,
+          nonCompliant: 0,
+          critical: 0,
+          // add more if needed
+        }
+      };
+    }
+
+    // Push item into group
+    groups[key].items.push(item);
+    groups[key].counts.total += 1;
+
+    // Count based on result
+    const resultVal = (item.result || '').toLowerCase();
+    if (resultVal.includes('compliant')) {
+      groups[key].counts.compliant += 1;
+    } else if (resultVal.includes('non-compliant')) {
+      groups[key].counts.nonCompliant += 1;
+    } else if (resultVal.includes('critical')) {
+      groups[key].counts.critical += 1;
+    }
+  });
+
+  return groups;
 }
