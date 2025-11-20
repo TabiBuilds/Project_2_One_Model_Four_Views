@@ -1,3 +1,5 @@
+// script.js (Main Entry Point)
+
 import showCards from './editable_js/template_cards.js';
 import showGroupedCategories from './editable_js/template_category.js';
 import showStats from './editable_js/template_stats.js';
@@ -9,7 +11,8 @@ import loadData from './editable_js/load_data.js';
 const viewsMap = {
   cards: showCards,
   table: showTable,
-  categories: showGroupedCategories,
+  // FIX: Use the correct imported function name
+  categories: showGroupedCategories, 
   stats: showStats
 };
 
@@ -51,6 +54,37 @@ function showError(message) {
   `);
 }
 
+/**
+ * Centralized handler to switch views, manage arguments, and attach event listeners.
+ */
+function handleViewSwitch(viewName, data) {
+    if (viewsMap[viewName]) {
+        let content;
+        
+        // FIX: Pass the required second argument (fields) for the Category View
+        if (viewName === 'categories') {
+            const groupingFields = ['category', 'city']; // Fields to group by
+            content = viewsMap[viewName](data, groupingFields);
+        } else {
+            // All other views (cards, table, stats) only require the data array
+            content = viewsMap[viewName](data);
+        }
+
+        updateDisplay(content);
+        updateNavActive(viewName);
+        
+        // FIX: Only attach table-specific handlers if the Table view is displayed
+        if (viewName === 'table') {
+            setTimeout(() => {
+                attachTableSorting();
+                attachTableFilter();
+                attachExportButton();
+            }, 50); 
+        }
+    }
+}
+
+
 // Main app initialization
 document.addEventListener("DOMContentLoaded", async () => {
   console.log("Starting application...");
@@ -61,22 +95,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Set up nav bar click handler (event delegation)
     document.querySelector('.navbar').addEventListener('click', (event) => {
-  const target = event.target.closest('.nav-item');
-  if (target && target.classList.contains('nav-item')) {
-    const viewName = target.getAttribute('data-view');
-    if (viewsMap[viewName]) {
-      updateDisplay(viewsMap[viewName](data));
-      updateNavActive(viewName);
-    }
-    attachTableSorting();
-attachTableFilter();
-attachExportButton();
-  }
-});
+      const target = event.target.closest('.nav-item');
+      if (target && target.classList.contains('nav-item')) {
+        const viewName = target.getAttribute('data-view');
+        handleViewSwitch(viewName, data);
+      }
+    });
 
-    // Show initial view
-    updateDisplay(showCards(data));
-    updateNavActive('cards');
+    // Show initial view (Card View)
+    handleViewSwitch('cards', data);
 
     console.log("Application ready!");
   } catch (error) {
@@ -85,33 +112,69 @@ attachExportButton();
   }
 });
 
+
+// --- Helper Functions (MUST BE EXPORTED FOR template_category.js to work) ---
+
+// FIX: Export groupByFields and correct logic for GeoJSON structure.
+export function groupByFields(data, fields) {
+  const groups = {};
+
+  data.forEach(item => {
+    // Determine where the properties are (item.properties for GeoJSON, item otherwise)
+    const props = item.properties || item; 
+
+    // Build the group key based on selected fields
+    const key = fields.map(field => props[field] || 'Unknown').join(' | ');
+    
+    if (!groups[key]) {
+      groups[key] = {
+        items: [],
+        counts: {
+          total: 0,
+          compliant: 0,
+          nonCompliant: 0,
+          critical: 0,
+        }
+      };
+    }
+
+    groups[key].items.push(item);
+    groups[key].counts.total += 1;
+
+    // Access inspection results
+    const resultVal = (props.inspection_results || '').toLowerCase();
+    
+    if (resultVal.includes('compliant')) {
+      groups[key].counts.compliant += 1;
+    } else if (resultVal.includes('non-compliant')) {
+      groups[key].counts.nonCompliant += 1;
+    } else if (resultVal.includes('critical')) {
+      groups[key].counts.critical += 1;
+    }
+  });
+
+  return groups;
+}
+
+// --- Table Attachment Functions (Unchanged logic, just ensuring they are here) ---
+
 function attachTableSorting() {
   document.querySelectorAll('.sortable').forEach(header => {
     header.addEventListener('click', () => {
-      const key = header.dataset.key;
-      // Toggle sort order: asc / desc
       const currentOrder = header.dataset.order || 'asc';
       const newOrder = currentOrder === 'asc' ? 'desc' : 'asc';
       header.dataset.order = newOrder;
-
-      // Get rows
       const tbody = header.closest('table').querySelector('tbody');
       const rows = Array.from(tbody.querySelectorAll('tr'));
-
-      // Sort rows
       rows.sort((a, b) => {
         const aText = a.querySelector(`td:nth-child(${header.cellIndex + 1})`).innerText;
         const bText = b.querySelector(`td:nth-child(${header.cellIndex + 1})`).innerText;
-
-        // Basic comparison, can be extended for dates/numbers
         if (!isNaN(aText) && !isNaN(bText)) {
           return newOrder === 'asc' ? aText - bText : bText - aText;
         } else {
           return newOrder === 'asc' ? aText.localeCompare(bText) : bText.localeCompare(aText);
         }
       });
-
-      // Append sorted rows
       rows.forEach(row => tbody.appendChild(row));
     });
   });
@@ -120,18 +183,14 @@ function attachTableSorting() {
 function attachTableFilter() {
   const searchInput = document.getElementById('tableSearch');
   const tbody = document.querySelector('.restaurant-table tbody');
+  
+  if (!searchInput || !tbody) return;
 
   searchInput.addEventListener('input', () => {
     const filterText = searchInput.value.toLowerCase();
-
     Array.from(tbody.rows).forEach(row => {
-      const nameCell = row.cells[0]; // assuming name is first column
-      const categoryCell = row.cells[4]; // assuming category is fifth column
-
-      const nameText = nameCell ? nameCell.innerText.toLowerCase() : '';
-      const categoryText = categoryCell ? categoryCell.innerText.toLowerCase() : '';
-
-      // Show row if either name or category includes the search term
+      const nameText = row.cells[0]?.innerText.toLowerCase() || '';
+      const categoryText = row.cells[4]?.innerText.toLowerCase() || '';
       if (nameText.includes(filterText) || categoryText.includes(filterText)) {
         row.style.display = '';
       } else {
@@ -143,32 +202,22 @@ function attachTableFilter() {
 
 function attachExportButton() {
   const exportBtn = document.getElementById('exportBtn');
+  if (!exportBtn) return;
+  
   exportBtn.addEventListener('click', () => {
     const table = document.querySelector('.restaurant-table');
-
-    // Select all data rows that are **not hidden**
     const rows = Array.from(table.querySelectorAll('tbody tr')).filter(row => row.style.display !== 'none');
-
-    // Prepare CSV
-    const columns = ['name', 'date', 'result', 'location', 'category']; // your columns
+    const columns = ['name', 'date', 'result', 'location', 'category']; 
     const csvRows = [];
-
-    // Add headers
     csvRows.push(columns.join(','));
-
-    // Add only visible rows data
     rows.forEach(row => {
       const cells = Array.from(row.cells);
       const rowData = columns.map((col, index) => {
-        // match columns with cells
         return `"${(cells[index]?.innerText || '').replace(/"/g, '""')}"`;
       });
       csvRows.push(rowData.join(','));
     });
-
     const csvContent = csvRows.join('\n');
-
-    // Download
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -177,43 +226,4 @@ function attachExportButton() {
     a.click();
     URL.revokeObjectURL(url);
   });
-}
-
-
-function groupByFields(data, fields) {
-  const groups = {};
-
-  data.forEach(item => {
-    // Build the group key based on selected fields
-    const key = fields.map(field => item[field] || 'Unknown').join(' | ');
-    
-    if (!groups[key]) {
-      groups[key] = {
-        items: [],
-        counts: {
-          total: 0,
-          compliant: 0,
-          nonCompliant: 0,
-          critical: 0,
-          // add more if needed
-        }
-      };
-    }
-
-    // Push item into group
-    groups[key].items.push(item);
-    groups[key].counts.total += 1;
-
-    // Count based on result
-    const resultVal = (item.result || '').toLowerCase();
-    if (resultVal.includes('compliant')) {
-      groups[key].counts.compliant += 1;
-    } else if (resultVal.includes('non-compliant')) {
-      groups[key].counts.nonCompliant += 1;
-    } else if (resultVal.includes('critical')) {
-      groups[key].counts.critical += 1;
-    }
-  });
-
-  return groups;
 }
