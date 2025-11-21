@@ -32,28 +32,47 @@ body {
     padding: 1rem;
 }
 
-header {
-  display: flex;
-  align-items: center; 
-  justify-content: center; 
-  gap: 1rem; 
-  background-color: var(--primary-color);
-  padding: 1.5rem 1rem; 
-  border-radius: 0;
-  box-shadow: none;
-  color: #fff;
-  text-align: center;
-}
 
-header h1 {
-    margin: 0;
-    font-size: 1.8em;
-    font-weight: 700;
+/* ====================================
+ * HEADER STYLING (Image Left, Text Center) 
+ * ==================================== */
+header {
+    /* Use flexbox to put the image and text side-by-side */
+    display: flex;
+    align-items: center; /* Vertically center the image and text */
+    gap: 10px; /* Space between image and text block */
+    background: var(--header-background);
+    color: white;
+    padding: 15px 45px;
+    /*border-radius: 8px 8px 0 0;*/
+    /*margin-bottom: 20px;*/
 }
 
 header img {
-    height: 50px; /* optional logo size */
-    /* margin-right: 1rem; */
+    /* Image: Left-aligned and a bit bigger (e.g., 100px wide) */
+    width: 100px; 
+    height: auto;
+    object-fit: contain;
+    flex-shrink: 0; /* Prevent the image from shrinking */
+}
+
+header > div {
+    /* Text Container: Take up remaining space */
+    flex-grow: 1;
+    /* FIX: Center the text content within this div */
+    text-align: center;
+}
+
+header h1 {
+    margin: 0 0 10px 0;
+    font-size: 2.5em;
+    font-weight: 700;
+}
+
+header p {
+    margin: 0;
+    font-size: 0.95rem;
+    opacity: 0.95;
 }
 
 /* Stacking content vertically on small screens */
@@ -61,6 +80,11 @@ header img {
   header {
     flex-direction: column;
   }
+  header h1 {
+    margin: 0 0 5px 0;
+    font-size: 1.8em;
+    font-weight: 700;
+}
 }
 
 /* Horizontal Navigation Bar: FULL WIDTH */
