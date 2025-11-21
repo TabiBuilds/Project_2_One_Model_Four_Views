@@ -1,6 +1,3 @@
-/** STATS VIEW - ENHANCED WITH CHART.JS */
-
-// Define the Chart.js colors (must be outside functions that use them)
 const compliantColor = '#28a745'; // Green
 const nonCompliantColor = '#dc3545'; // Red
 const scheduleColor = '#ffc107'; // Yellow/Orange

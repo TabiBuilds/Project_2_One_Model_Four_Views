@@ -1,5 +1,3 @@
-// template_category.js
-
 import { groupByFields } from '../script.js';
 
 // Helper to get all unique categories for the dropdown filter
