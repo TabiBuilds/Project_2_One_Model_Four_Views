@@ -1,15 +1,20 @@
 // script.js (Main Entry Point)
 
-// Import showCards and the ITEMS_PER_PAGE constant from the template file
+// Import view functions.
 import { showCards, ITEMS_PER_PAGE } from './editable_js/template_cards.js';
 import showGroupedCategories from './editable_js/template_category.js';
 import showStats from './editable_js/template_stats.js';
-import showTable from './editable_js/template_table.js';
+import showTable from './editable_js/template_table.js'; // Must be a default import
 
 import loadData from './editable_js/load_data.js';
 
 // --- APPLICATION STATE ---
 let cardCurrentPage = 1;
+let tableCurrentPage = 1; 
+
+// FIX: Change default sort order state to 'random'
+let cardSortOrder = 'random';
+
 
 // Map view names to functions
 const viewsMap = {
@@ -20,15 +25,15 @@ const viewsMap = {
 };
 
 /**
- * Update the display with new content
- */
+ * Update the display with new content
+ */
 function updateDisplay(content) {
   document.getElementById("data-display").innerHTML = content;
 }
 
 /**
- * Update button (nav item) active states
- */
+ * Update button (nav item) active states
+ */
 function updateNavActive(selectedView) {
   document.querySelectorAll(".nav-item").forEach((item) => {
     item.classList.remove("active");
@@ -38,15 +43,15 @@ function updateNavActive(selectedView) {
 }
 
 /**
- * Show loading state
- */
+ * Show loading state
+ */
 function showLoading() {
   updateDisplay('<div class="loading">Loading data from API...</div>');
 }
 
 /**
- * Show error state
- */
+ * Show error state
+ */
 function showError(message) {
   updateDisplay(`
     <div class="error">
@@ -58,72 +63,159 @@ function showError(message) {
 }
 
 /**
- * Centralized handler to switch views, manage arguments, and attach event listeners.
+ * NEW HELPER: Sorts the data based on the current cardSortOrder.
  */
-function handleViewSwitch(viewName, data) {
-    if (viewsMap[viewName]) {
-        let content;
+function sortDataForCards(data) {
+    let sortedData = [...data]; // Create a shallow copy
+
+    if (cardSortOrder === 'a-z') {
+        sortedData.sort((a, b) => {
+            const nameA = a.name ? a.name.toUpperCase() : '';
+            const nameB = b.name ? b.name.toUpperCase() : '';
+            return nameA.localeCompare(nameB);
+        });
+    } else if (cardSortOrder === 'z-a') {
+        sortedData.sort((a, b) => {
+            const nameA = a.name ? a.name.toUpperCase() : '';
+            const nameB = b.name ? b.name.toUpperCase() : '';
+            return nameB.localeCompare(nameA);
+        });
+    } else if (cardSortOrder === 'random') {
+        // Implement Fisher-Yates (Knuth) Shuffle for true random sort
+        let currentIndex = sortedData.length, randomIndex;
         
-        // --- VIEW-SPECIFIC RENDERING LOGIC ---
-        if (viewName === 'cards') {
-            // PASS THE CURRENT PAGE NUMBER FOR CARD VIEW
-            content = viewsMap[viewName](data, cardCurrentPage);
-        } else if (viewName === 'categories') {
-            const groupingFields = ['category', 'city']; // Fields to group by
-            content = viewsMap[viewName](data, groupingFields);
-        } else {
-            // Table and Stats views
-            content = viewsMap[viewName](data);
-        }
+        while (currentIndex !== 0) {
+            // Pick a remaining element.
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex--;
 
-        // --- UPDATE DISPLAY AND NAV ---
-        updateDisplay(content);
-        updateNavActive(viewName);
-
-        // --- ATTACH LISTENERS AFTER RENDER ---
-        if (viewName === 'table') {
-            setTimeout(() => {
-                attachTableSorting();
-                attachTableFilter();
-                attachExportButton();
-            }, 50); 
-        } else if (viewName === 'cards') {
-            // ATTACH THE NEW PAGINATION HANDLER
-            attachCardPaginationHandler(data);
-        }
-
-        // When switching away from cards, reset the page for the next time
-        if (viewName !== 'cards') {
-            cardCurrentPage = 1;
+            // And swap it with the current element.
+            [sortedData[currentIndex], sortedData[randomIndex]] = [
+                sortedData[randomIndex], sortedData[currentIndex]
+            ];
         }
     }
+    
+    return sortedData;
 }
 
 
 /**
- * Attaches the click listener for the Card View pagination buttons.
- */
-function attachCardPaginationHandler(data) {
-    document.querySelector('.pagination-controls').addEventListener('click', (event) => {
-        const target = event.target.closest('.page-btn');
-        if (target && !target.disabled) {
-            const newPage = parseInt(target.getAttribute('data-page'));
-            
-            // Validate the page number
-            if (!isNaN(newPage) && newPage >= 1 && newPage !== cardCurrentPage) {
-                const totalPages = Math.ceil(data.length / ITEMS_PER_PAGE);
-                if (newPage <= totalPages) {
-                    cardCurrentPage = newPage;
-                    
-                    // RENDER ONLY THE CARD VIEW AGAIN (do not switch tabs)
-                    handleViewSwitch('cards', data);
+ * Centralized handler to switch views, manage arguments, and attach event listeners.
+ */
+function handleViewSwitch(viewName, data) {
+    if (viewsMap[viewName]) {
+        let content;
+        // Determine the current page for this view
+        const currentPage = viewName === 'cards' ? cardCurrentPage : 
+                            viewName === 'table' ? tableCurrentPage : 1; 
 
-                    // Scroll to the top of the display container for better UX
-                    document.querySelector('.display-container').scrollIntoView({ behavior: 'smooth' });
-                }
-            }
+        // Apply sorting only if in Card View
+        const dataToRender = viewName === 'cards' ? sortDataForCards(data) : data;
+
+        // --- VIEW-SPECIFIC RENDERING LOGIC ---
+        if (viewName === 'cards' || viewName === 'table') {
+            // Pass the current page number and the potentially sorted data
+            content = viewsMap[viewName](dataToRender, currentPage, cardSortOrder); // Pass sort order to card view
+        } else if (viewName === 'categories') {
+            const groupingFields = ['category', 'city']; // Fields to group by
+            content = viewsMap[viewName](dataToRender, groupingFields);
+        } else {
+            // Stats view
+            content = viewsMap[viewName](dataToRender);
+        }
+
+        // --- UPDATE DISPLAY AND NAV ---
+        updateDisplay(content);
+        updateNavActive(viewName);
+
+        // --- ATTACH LISTENERS AFTER RENDER ---
+        if (viewName === 'table') {
+            // Attach table-specific handlers AND pagination
+            setTimeout(() => {
+                attachTableSorting();
+                attachTableFilter();
+                attachExportButton();
+                attachPaginationHandler(data, 'table');
+            }, 50); 
+        } else if (viewName === 'cards') {
+            // ATTACH PAGINATION & NEW SORT HANDLERS
+            attachPaginationHandler(data, 'cards');
+            attachCardSortHandler(data); // Attach handler for card sorting
+        }
+
+        // When switching away from cards or table, reset their pages for the next time
+        if (viewName !== 'cards') {
+            cardCurrentPage = 1;
+            cardSortOrder = 'random'; // FIX: Reset sort to 'random' when leaving card view
+        }
+        if (viewName !== 'table') {
+            tableCurrentPage = 1;
+        }
+    }
+}
+
+
+/**
+ * Attaches the change listener for the sorting dropdown in Card View.
+ * @param {Array} data - The full dataset.
+ */
+function attachCardSortHandler(data) {
+    const sortSelect = document.getElementById('cardSortSelect');
+    if (!sortSelect) return;
+
+    sortSelect.addEventListener('change', (event) => {
+        const newSort = event.target.value;
+        if (newSort !== cardSortOrder) {
+            cardSortOrder = newSort;
+            cardCurrentPage = 1; // Reset to page 1 after sorting
+            // Re-render the cards with the full data array, allowing handleViewSwitch to apply sorting
+            handleViewSwitch('cards', data); 
         }
     });
+}
+
+
+/**
+ * Attaches the click listener for both Card and Table View pagination buttons.
+ * @param {Array} data - The full dataset.
+ * @param {string} viewName - 'cards' or 'table'.
+ */
+function attachPaginationHandler(data, viewName) {
+    // Use event delegation on the controls container
+    const paginationControls = document.querySelector('.pagination-controls');
+    if (!paginationControls) return;
+
+    paginationControls.addEventListener('click', (event) => {
+        const target = event.target.closest('.page-btn');
+        if (target && !target.disabled) {
+            const newPage = parseInt(target.getAttribute('data-page'));
+            
+            // Validate the page number
+            if (!isNaN(newPage) && newPage >= 1) {
+                const totalPages = Math.ceil(data.length / ITEMS_PER_PAGE);
+
+                if (newPage <= totalPages) {
+                    // Check if page actually changed and update the correct state variable
+                    if (viewName === 'cards') {
+                        if (newPage === cardCurrentPage) return;
+                        cardCurrentPage = newPage;
+                    } else if (viewName === 'table') {
+                        if (newPage === tableCurrentPage) return;
+                        tableCurrentPage = newPage;
+                    } else {
+                        return; // Safety check
+                    }
+                    
+                    // RENDER THE CURRENT VIEW AGAIN with the new page
+                    handleViewSwitch(viewName, data);
+
+                    // Scroll to the top of the display container for better UX
+                    document.querySelector('.display-container').scrollIntoView({ behavior: 'smooth' });
+                }
+            }
+        }
+    });
 }
 
 
@@ -156,8 +248,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
 // --- Helper Functions (MUST BE EXPORTED FOR template_category.js to work) ---
-
-// FIX: Export groupByFields and correct logic for GeoJSON structure.
+// This is used by template_category.js
 export function groupByFields(data, fields) {
   const groups = {};
 
@@ -198,7 +289,7 @@ export function groupByFields(data, fields) {
   return groups;
 }
 
-// --- Table Attachment Functions (Unchanged logic, just ensuring they are here) ---
+// --- Table Attachment Functions (Unchanged) ---
 
 function attachTableSorting() {
   document.querySelectorAll('.sortable').forEach(header => {

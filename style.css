@@ -629,3 +629,33 @@ body {
     outline: 2px solid var(--secondary-color);
     outline-offset: 1px;
 }
+
+
+
+
+/* Card View Controls */
+.card-controls {
+    display: flex;
+    justify-content: right; 
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    padding: 20px 0;
+    border-bottom: 1px solid #eee;
+    /* Ensure it takes full width for proper left alignment in the container */
+    width: 100%; 
+}
+
+.card-controls label {
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+#cardSortSelect {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    font-size: 1rem;
+    cursor: pointer;
+    background-color: #f9f9f9;
+}
